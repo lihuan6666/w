@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>道路数据统计图</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    .chart-container {
+      width: 80%;
+      height: 400px;
+      margin: 20px auto;
+    }
+    canvas {
+      -moz-user-select: none;
+      -webkit-user-select: none;
+      -ms-user-select: none;
+    }
+  </style>
+</head>
+<button onclick="openPage('index.html')">返回首页</button>
+<body>
+<h1>道路数据统计图</h1>
+
+<!-- 条形统计图容器 -->
+<div class="chart-container">
+  <canvas id="nameLengthChart"></canvas>
+</div>
+<div class="chart-container">
+  <canvas id="nameDensityChart"></canvas>
+</div>
+<div class="chart-container">
+  <canvas id="nameConnectedVillagesChart"></canvas>
+</div>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    fetch('/api/shuju')
+            .then(response => {
+              if (!response.ok) {
+                throw new Error('Network response was not ok');
+              }
+              return response.json();
+            })
+            .then(data => {
+              // 准备图表数据
+              const names = data.map(item => item.name);
+              const nameLengths = names.map(name => name.length);
+              const densities = data.map(item => item.density);
+              const connectedVillages = data.map(item => item.count);
+
+              // 创建不同名字长度的条形统计图
+              const ctxNameLength = document.getElementById('nameLengthChart').getContext('2d');
+              new Chart(ctxNameLength, {
+                type: 'bar',
+                data: {
+                  labels: names,
+                  datasets: [{
+                    label: '公路长度',
+                    data: nameLengths,
+                    backgroundColor: 'rgba(255, 99, 132, 0.2)',
+                    borderColor: 'rgba(255, 99, 132, 1)',
+                    borderWidth: 1
+                  }]
+                },
+                options: {
+                  scales: {
+                    y: {
+                      beginAtZero: true
+                    }
+                  }
+                }
+              });
+
+              // 创建不同名字密度的条形统计图
+              const ctxNameDensity = document.getElementById('nameDensityChart').getContext('2d');
+              new Chart(ctxNameDensity, {
+                type: 'bar',
+                data: {
+                  labels: names,
+                  datasets: [{
+                    label: '公路密度',
+                    data: densities,
+                    backgroundColor: 'rgba(54, 162, 235, 0.2)',
+                    borderColor: 'rgba(54, 162, 235, 1)',
+                    borderWidth: 1
+                  }]
+                },
+                options: {
+                  scales: {
+                    y: {
+                      beginAtZero: true
+                    }
+                  }
+                }
+              });
+
+              // 创建不同名字连接村庄数的条形统计图
+              const ctxNameConnectedVillages = document.getElementById('nameConnectedVillagesChart').getContext('2d');
+              new Chart(ctxNameConnectedVillages, {
+                type: 'bar',
+                data: {
+                  labels: names,
+                  datasets: [{
+                    label: '连接村庄数量',
+                    data: connectedVillages,
+                    backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                    borderColor: 'rgba(75, 192, 192, 1)',
+                    borderWidth: 1
+                  }]
+                },
+                options: {
+                  scales: {
+                    y: {
+                      beginAtZero: true
+                    }
+                  }
+                }
+              });
+            })
+            .catch(error => {
+              console.error("Error fetching data: ", error);
+            });
+  });
+  function openPage(page) {
+    if (page) {
+      window.location.href = page;
+    } else {
+      alert('请选择一个页面！');
+    }
+  }
+</script>
+</body>
+</html>

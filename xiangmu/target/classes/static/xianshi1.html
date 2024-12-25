@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>道路数据展示</title>
+    <link rel="stylesheet" href="css/main.css">
+    <link rel="stylesheet" href="css/1.css">
+</head>
+<body>
+<button onclick="openPage('index.html')">返回首页</button>
+<h1>道路数据列表</h1>
+
+<!-- 查询输入框和按钮 -->
+<label for="searchInput">查询条件:</label>
+<input type="text" id="searchInput" placeholder="输入ID、名称或等级">
+<button onclick="searchData()">查询</button>
+<button onclick="location.reload()">刷新</button>
+
+<button id="myBtn">添加道路数据</button>
+<button id="exportBtn">导出数据</button>
+<button id="importBtn">导入数据</button>
+<input type="file" id="fileInput" style="display: none;" accept=".xlsx, .xls">
+
+
+<!-- 模态框 -->
+<div id="myModal" class="modal">
+    <div class="modal-content">
+        <span class="close">&times;</span>
+        <h2>添加道路数据</h2>
+        <!-- 统一的表单 -->
+        <form id="combinedForm">
+            <label for="roadName">道路名称:</label>
+            <input type="text" id="roadName" name="roadName" required><br><br>
+            <label for="roadLevel">道路等级:</label>
+            <input type="text" id="roadLevel" name="roadLevel" required><br><br>
+            <label for="density">密度:</label>
+            <input type="number" id="density" name="density" step="0.01" required><br><br>
+            <label for="length">长度:</label>
+            <input type="number" id="length" name="length" step="0.01" required><br><br>
+            <label for="connectedVillages">连接村庄数:</label>
+            <input type="number" id="connectedVillages" name="connectedVillages" required><br><br>
+            <label for="road_start">起点:</label>
+            <input type="text" id="road_start" name="road_start" required><br><br>
+            <button type="submit">提交</button>
+        </form>
+    </div>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="js/1.js"></script>
+
+<table id="shujuTable">
+    <tr>
+        <th>ID</th>
+        <th>名称</th>
+        <th>密度</th>
+        <th>长度</th>
+        <th>连接村庄数</th>
+        <th>等级</th>
+        <th>位置</th>
+        <th>操作</th>
+    </tr>
+</table>
+
+<script>
+    $(document).ready(function() {
+        loadData();
+    });
+
+    function loadData() {
+        $.ajax({
+            url: '/api/shuju',
+            type: 'GET',
+            dataType: 'json',
+            success: function(data) {
+                populateTable(data);
+            },
+            error: function(error) {
+                console.error("Error fetching data: ", error);
+            }
+        });
+    }
+
+    function searchData() {
+        const searchTerm = $('#searchInput').val();
+        $.ajax({
+            url: `/api/shuju/search?query=${searchTerm}`,
+            type: 'GET',
+            dataType: 'json',
+            success: function(data) {
+                $('#shujuTable').find('tr:gt(0)').remove();
+                populateTable(data);
+            },
+            error: function(error) {
+                console.error("Error fetching data: ", error);
+            }
+        });
+    }
+
+    function populateTable(data) {
+        data.forEach(function(shuju) {
+            $('#shujuTable').append(
+                '<tr>' +
+                '<td>' + shuju.id + '</td>' +
+                '<td>' + shuju.name + '</td>' +
+                '<td>' + shuju.density + '</td>' +
+                '<td>' + shuju.length + '</td>' +
+                '<td>' + shuju.count + '</td>' +
+                '<td>' + shuju.level + '</td>' +
+                '<td>' + shuju.start + '</td>' +
+                '<td><button onclick="deleteData(' + shuju.id + ')">删除</button></td>' +
+                '</tr>'
+            );
+        });
+    }
+
+    function deleteData(id) {
+        if (confirm('确定要删除ID为 ' + id + ' 的数据吗？')) {
+            $.ajax({
+                url: `/api/shuju/${id}`,
+                type: 'DELETE',
+                success: function() {
+                    alert('删除成功');
+                    location.reload(); // 重新加载数据
+                },
+                error: function(error) {
+                    console.error("Error deleting data: ", error);
+                }
+            });
+        }
+    }
+
+    function openPage(page) {
+        if (page) {
+            window.location.href = page;
+        } else {
+            alert('请选择一个页面！');
+        }
+    }
+
+    // 导出数据到Excel
+    document.getElementById('exportBtn').addEventListener('click', function() {
+        window.location.href = '/api/shuju/export'; // 直接重定向到导出接口
+    });
+    document.getElementById('importBtn').addEventListener('click', function() {
+        document.getElementById('fileInput').click(); // 触发文件输入点击事件
+    });
+
+    // 监听文件输入变化事件
+    document.getElementById('fileInput').addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        if (file) {
+            // 创建FormData对象并添加文件
+            const formData = new FormData();
+            formData.append('file', file);
+
+            // 使用fetch API上传文件
+            fetch('/api/import', {
+                method: 'POST',
+                body: formData
+            })
+                .then(response => response.text())
+                .then(result => {
+                    alert('文件上传成功: ' + result);
+                    location.reload(); // 重新加载数据
+                })
+                .catch(error => {
+                    console.error('文件上传失败:', error);
+                    alert('文件上传失败');
+                });
+        }
+    });
+    document.getElementById('importBtn').addEventListener('click', function() {
+        document.getElementById('fileInput').click(); // 触发文件输入点击事件
+    });
+
+    // 监听文件输入变化事件
+    document.getElementById('fileInput').addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        if (file) {
+            // 创建FormData对象并添加文件
+            const formData = new FormData();
+            formData.append('file', file);
+
+            // 使用fetch API上传文件
+            fetch('/api/import/shuju2', {
+                method: 'POST',
+                body: formData
+            })
+                .then(response => response.text())
+                .then(result => {
+                    alert('文件上传成功: ' + result);
+                    location.reload(); // 重新加载数据
+                })
+                .catch(error => {
+                    console.error('文件上传失败:', error);
+                    alert('文件上传失败');
+                });
+        }
+    });
+
+</script>
+</body>
+</html>

@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>交通事故数据展示</title>
+    <link rel="stylesheet" href="css/main.css">
+    <link rel="stylesheet" href="css/2.css">
+</head>
+<button onclick="openPage('index.html')">返回首页</button>
+<body>
+<h1>交通事故数据列表</h1>
+
+<!-- 查询输入框和按钮 -->
+<label for="searchInput">查询条件:</label>
+<input type="text" id="searchInput" placeholder="输入名字或时间">
+<button onclick="searchData()">查询</button>
+<button onclick="location.reload()">刷新</button>
+<link rel="stylesheet" href="css/2.css">
+<!-- 触发模态框显示的按钮 -->
+<button id="openModalBtn">添加交通事故数据</button>
+<!-- 模态框 -->
+<div id="myModal" class="modal">
+    <div class="modal-content">
+        <span class="close">&times;</span>
+        <h2>添加交通事故数据</h2>
+        <form id="addTrafficAccidentForm">
+            <label for="accidentType">事故类型:</label>
+            <input type="text" id="accidentType" name="accidentType" required>
+            <label for="triggeringFactors">引发因素:</label>
+            <input type="text" id="triggeringFactors" name="triggeringFactors" required>
+            <label for="dataStatistics">数据统计:</label>
+            <input type="number" id="dataStatistics" name="dataStatistics" required>
+            <label for="roadName">道路名称:</label>
+            <input type="text" id="roadName" name="roadName" required>
+            <label for="time">时间:</label>
+            <input type="datetime-local" id="time" name="time" required>
+            <button type="submit">添加</button>
+        </form>
+    </div>
+</div>
+
+<script src="js/2.js"></script>
+<table id="trafficAccidentTable">
+    <tr>
+        <th>ID</th>
+        <th>事故类型</th>
+        <th>引发因素</th>
+        <th>数据统计</th>
+        <th>道路名称</th>
+        <th>时间</th>
+        <th>操作</th>
+    </tr>
+</table>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+<script>
+    document.getElementById('addTrafficAccidentForm').addEventListener('submit', function(event) {
+        event.preventDefault(); // 阻止表单默认提交行为
+
+        // 获取表单数据
+        const accidentType = document.getElementById('accidentType').value;
+        const triggeringFactors = document.getElementById('triggeringFactors').value;
+        const dataStatistics = parseInt(document.getElementById('dataStatistics').value);
+        const roadName = document.getElementById('roadName').value;
+        const time = document.getElementById('time').value;
+
+        // 发送 POST 请求添加交通事故数据
+        fetch('/api/trafficaccidents/add', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                accident_type: accidentType,
+                triggeringfactors: triggeringFactors,
+                data_statistics: dataStatistics,
+                road_name: roadName,
+                time: time
+            })
+        }).then(response => {
+            if (response.ok) {
+                alert('添加成功');
+                loadData();
+                document.getElementById('myModal').style.display = 'none';
+            } else {
+                throw new Error('添加失败');
+            }
+        })
+            .catch(error => {
+                console.error("Error adding data: ", error);
+                alert('添加失败，请检查网络连接或联系管理员。');
+            });
+    });
+    $(document).ready(function() {
+        loadData();
+    });
+
+
+    function loadData() {
+        $.ajax({
+            url: '/api/trafficaccidents',
+            type: 'GET',
+            dataType: 'json',
+            success: function(data) {
+                populateTable(data);
+            },
+            error: function(error) {
+                console.error("Error fetching data: ", error);
+            }
+        });
+    }
+
+    function searchData() {
+        const searchTerm = $('#searchInput').val();
+        $.ajax({
+            url: '/api/trafficaccidents/search',
+            type: 'GET',
+            data: { query: searchTerm },
+            dataType: 'json',
+            success: function(data) {
+                $('#trafficAccidentTable').find('tr:gt(0)').remove();
+                populateTable(data);
+            },
+            error: function(error) {
+                console.error("Error fetching data: ", error);
+            }
+        });
+    }
+
+    function populateTable(data) {
+        data.forEach(function(accident) {
+            $('#trafficAccidentTable').append(
+                '<tr>' +
+                '<td>' + accident.id + '</td>' +
+                '<td>' + accident.accident_type + '</td>' +
+                '<td>' + accident.triggeringfactors + '</td>' +
+                '<td>' + accident.data_statistics + '</td>' +
+                '<td>' + accident.road_name + '</td>' +
+                '<td>' + accident.time + '</td>' +
+                '<td><button onclick="deleteData(' + accident.id + ')">删除</button></td>' +
+                '</tr>'
+            );
+        });
+    }
+    function deleteData(id) {
+        if (confirm('确定要删除ID为 ' + id + ' 的数据吗？')) {
+            $.ajax({
+                url: '/api/trafficaccidents1/'+id,
+                type: 'DELETE',
+                success: function() {
+                    alert('删除成功');
+                    location.reload();
+                },
+                error: function(error) {
+                    console.error("Error deleting data: ", error);
+                    alert('删除失败，请检查网络连接或联系管理员。');
+                }
+            });
+        }
+    }
+    document.getElementById('openModalBtn').addEventListener('click', function() {
+        document.getElementById('myModal').style.display = 'block';
+    });
+    function openPage(page) {
+        if (page) {
+            window.location.href = page;
+        } else {
+            alert('请选择一个页面！');
+        }
+    }
+</script>
+</body>
+</html>

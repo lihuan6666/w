@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>公路信息管理系统</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+        button {
+            padding: 5px 10px;
+            margin: 5px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+<h1>首页</h1>
+<table>
+    <thead>
+    <tr>
+        <th>功能</th>
+        <th>操作</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr>
+        <td>显示公路信息</td>
+        <td><button onclick="openPage('xianshi1.html')">进入</button></td>
+    </tr>
+    <tr>
+        <td>条形统计图</td>
+        <td><button onclick="openPage('Tuxingxiansh.html')">进入</button>
+        </td>
+    </tr>
+    <tr>
+        <td>道路出现情况</td>
+        <td><button onclick="openPage('trafficaccident.html')">进入</button></td>
+    </tr>
+    <tr>
+        <td>公路维修管理</td>
+        <td><button onclick="openPage('weixiu.html')">进入</button></td>
+    </tr>
+    <tr>
+        <td>公路建设管理</td>
+        <td><button onclick="openPage('jianshe.html')">进入</button></td>
+    </tr>
+    <!-- 可以根据需要添加更多行 -->
+    </tbody>
+</table>
+
+<script>
+    function openPage(page) {
+            window.location.href = page;
+    }
+</script>
+</body>
+</html>
